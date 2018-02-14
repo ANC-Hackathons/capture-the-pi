@@ -51,6 +51,7 @@ void loop() {
   } else {
     stealCheck();
     killCheck();
+    captureCheck();
 
     if(flagBearer) {
       whiteToggle = !whiteToggle;
@@ -93,7 +94,8 @@ void chooseTeam() {
 void stealCheck() {
   int val = analogRead(palmPin);
   //Serial.println(val);
-  if (redTeam && !flagBearer && val == blueBaseVolt && blockingDebounce(palmPin, val)) {
+  //if (redTeam && !flagBearer && val == blueBaseVolt && blockingDebounce(palmPin, val)) {
+  if (redTeam && !flagBearer && val >= blueBaseVolt - 10 && val <= blueBaseVolt + 10 && blockingDebounce(palmPin, val)) {
     flagBearer = true;
   } else if (blueTeam && !flagBearer && val == redBaseVolt && blockingDebounce(palmPin, val)) {
     flagBearer = true;
@@ -112,7 +114,16 @@ void killCheck() {
 }
 
 void captureCheck() {
-  
+  int val = analogRead(palmPin);
+  //Serial.println(val);
+  if (redTeam && flagBearer && val == redBaseVolt && blockingDebounce(palmPin, val)) {
+    flagBearer = false;
+    score += 10;
+  //} else if (blueTeam && flagBearer && val == blueBaseVolt && blockingDebounce(palmPin, val)) {
+  } else if (blueTeam && flagBearer && val >= blueBaseVolt - 10 && val <= blueBaseVolt + 10 && blockingDebounce(palmPin, val)) {
+    flagBearer = false;
+    score += 10;
+  }
 }
 
 boolean blockingDebounce(int pin, int initialState) {
