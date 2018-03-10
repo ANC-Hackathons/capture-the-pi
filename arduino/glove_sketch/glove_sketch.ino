@@ -1,7 +1,7 @@
 #include <ArduinoPebbleSerial.h>
 
 // Pebble communication
-static const uint16_t SUPPORTED_SERVICES[] = {0x0000, 0x1001};
+static const uint16_t SUPPORTED_SERVICES[] = {0x1001};
 static const uint8_t NUM_SERVICES = 2;
 static uint8_t pebble_buffer[GET_PAYLOAD_BUFFER_SIZE(200)];
 
@@ -25,6 +25,7 @@ const int blueCarryPulse = 1530;  // Pulse for Blue player with flag in ms
 const int debounceTime = 1000;    // The time in ms required for a switch to be stable
 
 boolean teamChosen = false;       // Init sketch without a team
+boolean watchTeamSet = false;     // Init sketch assuming watch is not set
 boolean blueTeam = false;
 boolean redTeam = false;
 boolean flagBearer = false;       // Init sketch as not flag bearer
@@ -94,31 +95,14 @@ void loop() {
   uint16_t attribute_id;
   RequestType type;
   if (ArduinoPebbleSerial::feed(&service_id, &attribute_id, &length, &type)) {
-    if ((service_id == 0) && (attribute_id == 0)) {
-      // we have a raw data frame to process
-      static bool led_status = false;
-      led_status = !led_status;
-      digitalWrite(LED_BUILTIN, led_status);
-      if (type == RequestTypeRead) {
-        // send a response to the Pebble - reuse the same buffer for the response
-        uint32_t current_time = millis();
-        memcpy(pebble_buffer, &current_time, 4);
-        ArduinoPebbleSerial::write(true, pebble_buffer, 4);
-        Serial.println("Got raw data read");
-      } else if (type == RequestTypeWrite) {
-        Serial.print("Got raw data write: ");
-        Serial.println((uint8_t)pebble_buffer[0], DEC);
-      } else {
-        // invalid request type - just ignore the request
-      }
-    } else if ((service_id == 0x1001) && (attribute_id == 0x1001)) {
+    if ((service_id == 0x1001) && (attribute_id == 0x0001)) {
       static uint32_t s_test_attr_data = 99999;
       if (type == RequestTypeWriteRead) {
         // read the previous value and write the new one
         uint32_t old_value = s_test_attr_data;
         memcpy(&s_test_attr_data, pebble_buffer, sizeof(s_test_attr_data));
         ArduinoPebbleSerial::write(true, (const uint8_t *)&old_value, sizeof(old_value));
-        Serial.println("Got WriteRead for 0x1001,0x1001");
+        Serial.println("Got WriteRead for 0x1001,0x0001");
       } else {
         // invalid request type - just ignore the request
       }
@@ -140,8 +124,8 @@ void loop() {
     }
     // notify the pebble every 2.5 seconds
     if (millis() - last_notify  > 2500) {
-      Serial.println("Sending notification for 0x1001,0x1001");
-      ArduinoPebbleSerial::notify(0x1001, 0x1001);
+      Serial.println("Sending notification for 0x1001,0x0001");
+      ArduinoPebbleSerial::notify(0x1001, 0x0001);
       last_notify = millis();
     }
   } else {

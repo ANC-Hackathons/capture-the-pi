@@ -9,11 +9,16 @@ static TextLayer *s_attr_text_layer;
 static TextLayer *s_raw_text_layer;
 static char s_text_buffer1[20];
 static char s_text_buffer2[20];
-static SmartstrapAttribute *s_raw_attribute;
 static SmartstrapAttribute *s_attr_attribute;
 
+// Define constants for your service ID, attribute ID
+// and buffer size of your attribute.
+static const SmartstrapServiceId s_service_id = 0x1001;
+static const SmartstrapAttributeId s_attribute_id = 0x0001;
+static const int s_buffer_length = 64;
+
 static void prv_update_text(void) {
-  if (smartstrap_service_is_available(SMARTSTRAP_RAW_DATA_SERVICE_ID)) {
+  if (smartstrap_service_is_available(s_service_id)) {
     text_layer_set_text(s_status_layer, "Connected!");
   } else {
     text_layer_set_text(s_status_layer, "Connecting...");
@@ -31,14 +36,6 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
       text_layer_set_text(s_attr_text_layer, s_text_buffer1);
       window_set_background_color(s_main_window, GColorSunsetOrange);
     }
-  } else if (attr == s_raw_attribute) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "did_read(s_raw_attribute, %d, %d)", result, length);
-    if (result == SmartstrapResultOk && length == 4) {
-      uint32_t time;
-      memcpy(&time, data, 4);
-      snprintf(s_text_buffer2, 20, "%u", (unsigned int)time);
-      text_layer_set_text(s_raw_text_layer, s_text_buffer2);
-    }
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "did_read(<%p>, %d)", attr, result);
   }
@@ -47,8 +44,6 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
 static void prv_did_write(SmartstrapAttribute *attr, SmartstrapResult result) {
   if (attr == s_attr_attribute) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "did_write(s_attr_attribute, %d)", result);
-  } else if (attr == s_raw_attribute) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "did_write(s_raw_attribute, %d)", result);
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "did_write(<%p>, %d)", attr, result);
   }
@@ -81,20 +76,8 @@ static void prv_write_read_test_attr(void) {
   }
 }
 
-static void prv_read_raw(void) {
-  if (!smartstrap_service_is_available(smartstrap_attribute_get_service_id(s_raw_attribute))) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "s_raw_attribute is not available");
-    return;
-  }
-  SmartstrapResult result = smartstrap_attribute_read(s_raw_attribute);
-  if (result != SmartstrapResultOk) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Read of s_raw_attribute failed with result: %d", result);
-  }
-}
-
 static void prv_send_request(void *context) {
   prv_write_read_test_attr();
-  prv_read_raw();
   app_timer_register(900, prv_send_request, NULL);
 }
 
@@ -106,8 +89,6 @@ static void prv_availablility_status_changed(SmartstrapServiceId service_id, boo
 static void prv_notified(SmartstrapAttribute *attr) {
   if (attr == s_attr_attribute) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_attr_attribute)");
-  } else if (attr == s_raw_attribute) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_raw_attribute)");
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "notified(<%p>)", attr);
   }
@@ -162,8 +143,7 @@ static void prv_init(void) {
   };
   smartstrap_subscribe(handlers);
   smartstrap_set_timeout(50);
-  s_raw_attribute = smartstrap_attribute_create(0, 0, 2000);
-  s_attr_attribute = smartstrap_attribute_create(0x1001, 0x1001, 20);
+  s_attr_attribute = smartstrap_attribute_create(s_service_id, s_attribute_id, s_buffer_length);
   app_timer_register(1000, prv_send_request, NULL);
 }
 
@@ -175,7 +155,7 @@ static void prv_deinit(void) {
 int main(void) {
   prv_init();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "STARTING APP");
-  if (s_attr_attribute && s_raw_attribute) {
+  if (s_attr_attribute) {
     app_event_loop();
   }
   APP_LOG(APP_LOG_LEVEL_DEBUG, "ENDING APP");
