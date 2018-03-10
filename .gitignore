@@ -102,3 +102,6 @@ ENV/
 
 # OSX Files
 .DS_Store
+
+# Pebble build files
+.lock-waf_darwin_build

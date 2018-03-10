@@ -1,24 +1,28 @@
 const int palmPin = A2;           // The number of the palm reader pin
-const int forearmPin = 11;        // The number of the forearm pin
-const int falseArmPin = 10;       // The number of an extra pin for arm testing
-const int whiteLEDPin = 2;        // The number of the pin powering the white LEDs
-const int blueLEDPin = 3;         // The number of the pin powering the blue LEDs
-const int redLEDPin = 9;          // The number of the pin powering the red LEDs
+const int redLEDPin = 2;          // The number of the pin powering the red LEDs
+const int whiteLEDPin = 3;        // The number of the pin powering the white LEDs
+const int blueLEDPin = 9;         // The number of the pin powering the blue LEDs
+const int forearmPin = 10;        // The number of the forearm pin
+const int pebblePin = 11;         // The number of the pin for serial communication with the Pebble
 
 const int redBaseVolt = 0;        // Voltage of Red base (0 - 1023)
-const int blueBaseVolt = 660;     // Voltage of Blue base (0 - 1023)
-const int deadArmVolt = 128;      // Voltage of arm without flag (0 - 255)
+const int blueBaseVolt = 1023;     // Voltage of Blue base (0 - 1023)
+
 const int redCarryVolt = 64;      // Voltage of Red player with flag (0 - 255)
-const int redCarryPulse = 510;    // Pulse for Red player with flag in ms
+const int deadArmVolt = 128;      // Voltage of arm without flag (0 - 255)
 const int blueCarryVolt = 192;    // Voltage of Blue player with flag (0 - 255)
+
+const int redCarryPulse = 510;    // Pulse for Red player with flag in ms
 const int blueCarryPulse = 1530;  // Pulse for Blue player with flag in ms
-const int debounceTime = 3000;    // The time in ms required for a switch to be stable
+
+const int debounceTime = 1000;    // The time in ms required for a switch to be stable
 
 boolean teamChosen = false;       // Init sketch without a team
 boolean blueTeam = false;
 boolean redTeam = false;
 boolean flagBearer = false;       // Init sketch as not flag bearer
 boolean whiteToggle = false;      // Toggle for blinking the white LEDs
+
 int score = 0;                    // Score tracker for testing
 
 void setup() {
@@ -41,7 +45,7 @@ void setup() {
   analogWrite(forearmPin, deadArmVolt);
 
   // Initialize falsearm pin for testing
-  analogWrite(falseArmPin, redCarryVolt);
+  //analogWrite(falseArmPin, redCarryVolt);
 }
 
 void loop() {
@@ -66,7 +70,7 @@ void loop() {
 
 void chooseTeam() {
   int val = analogRead(palmPin);
-  //Serial.println(val);
+  Serial.println(val);
   if(val == redBaseVolt) {
     // Red base is kept low
     if (blockingDebounce(palmPin, val)) {
@@ -93,7 +97,7 @@ void chooseTeam() {
 
 void stealCheck() {
   int val = analogRead(palmPin);
-  //Serial.println(val);
+  Serial.println(val);
   //if (redTeam && !flagBearer && val == blueBaseVolt && blockingDebounce(palmPin, val)) {
   if (redTeam && !flagBearer && val >= blueBaseVolt - 10 && val <= blueBaseVolt + 10 && blockingDebounce(palmPin, val)) {
     flagBearer = true;
@@ -115,7 +119,7 @@ void killCheck() {
 
 void captureCheck() {
   int val = analogRead(palmPin);
-  //Serial.println(val);
+  Serial.println(val);
   if (redTeam && flagBearer && val == redBaseVolt && blockingDebounce(palmPin, val)) {
     flagBearer = false;
     score += 10;
@@ -132,7 +136,7 @@ boolean blockingDebounce(int pin, int initialState) {
   int state = initialState;
 
   //while (state == initialState) {  // Debounce loop
-  while (state >= initialState - 20 && state <= initialState + 20) {  // Debounce loop
+  while (state >= initialState - 50 && state <= initialState + 50) {  // Debounce loop
     if(counter >= debounceTime) {
       Serial.print("Returning true after ");
       Serial.print(counter);

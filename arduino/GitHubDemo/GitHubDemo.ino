@@ -16,7 +16,13 @@ void setup() {
 //                                      SUPPORTED_SERVICES, NUM_SERVICES);
 //#elif defined(__AVR_ATmega32U4__)
   // Teensy 2.0 uses the one-wire software serial mode (pin 2);
-  const uint8_t PEBBLE_PIN = 1;
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(9, OUTPUT);
+  //digitalWrite(2, HIGH);
+  //digitalWrite(3, HIGH);
+  //digitalWrite(9, HIGH);
+  const uint8_t PEBBLE_PIN = 11;
   STATIC_ASSERT_VALID_ONE_WIRE_SOFT_SERIAL_PIN(PEBBLE_PIN);
   ArduinoPebbleSerial::begin_software(PEBBLE_PIN, pebble_buffer, sizeof(pebble_buffer), Baud57600,
                                       SUPPORTED_SERVICES, NUM_SERVICES);
