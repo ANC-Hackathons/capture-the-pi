@@ -29,6 +29,7 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
       memcpy(&num, data, 4);
       snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
       text_layer_set_text(s_attr_text_layer, s_text_buffer1);
+      window_set_background_color(s_main_window, GColorSunsetOrange);
     }
   } else if (attr == s_raw_attribute) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "did_read(s_raw_attribute, %d, %d)", result, length);
@@ -113,8 +114,8 @@ static void prv_notified(SmartstrapAttribute *attr) {
 }
 
 static void prv_main_window_load(Window *window) {
-  s_status_layer = text_layer_create(GRect(0, 15, 144, 40));
-  text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+  s_status_layer = text_layer_create(GRect(0, 5, 144, 40));
+  text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   prv_update_text();
   text_layer_set_text_color(s_status_layer, GColorBlack);
   text_layer_set_background_color(s_status_layer, GColorClear);
@@ -124,7 +125,7 @@ static void prv_main_window_load(Window *window) {
 
   s_attr_text_layer = text_layer_create(GRect(0, 60, 144, 40));
   text_layer_set_font(s_attr_text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
-  text_layer_set_text(s_attr_text_layer, "-");
+  text_layer_set_text(s_attr_text_layer, "Select a team...");
   text_layer_set_text_color(s_attr_text_layer, GColorBlack);
   text_layer_set_background_color(s_attr_text_layer, GColorClear);
   text_layer_set_text_alignment(s_attr_text_layer, GTextAlignmentCenter);
