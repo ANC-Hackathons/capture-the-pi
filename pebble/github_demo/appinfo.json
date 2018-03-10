@@ -1,8 +1,8 @@
 {
-  "uuid": "019798b0-f1f7-4e43-b4c3-892391790f52",
-  "shortName": "Smartstrap Demo",
-  "longName": "Smartstrap Demo",
-  "companyName": "Pebble",
+  "uuid": "1DD0F46A-5253-413A-B2E9-80827FC0A039",
+  "shortName": "Capture the Pi",
+  "longName": "Capture the Pi",
+  "companyName": "ANC Hackathons",
   "versionCode": 1,
   "versionLabel": "1.0",
   "sdkVersion": "3",
