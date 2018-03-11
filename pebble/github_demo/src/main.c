@@ -10,11 +10,13 @@ static TextLayer *s_raw_text_layer;
 static char s_text_buffer1[20];
 static char s_text_buffer2[20];
 static SmartstrapAttribute *s_attr_attribute;
+static SmartstrapAttribute *s_team_attribute;
 
 // Define constants for your service ID, attribute ID
 // and buffer size of your attribute.
 static const SmartstrapServiceId s_service_id = 0x1001;
 static const SmartstrapAttributeId s_attribute_id = 0x0001;
+static const SmartstrapAttributeId s_team_attribute_id = 0x0002;
 static const int s_buffer_length = 64;
 
 static void prv_update_text(void) {
@@ -34,7 +36,18 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
       memcpy(&num, data, 4);
       snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
       text_layer_set_text(s_attr_text_layer, s_text_buffer1);
-      window_set_background_color(s_main_window, GColorSunsetOrange);
+    }
+  } else if (attr == s_team_attribute) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "did_read(s_team_attribute, %d, %d)", result, length);
+    if (result == SmartstrapResultOk) {
+      uint32_t num;
+      memcpy(&num, data, 4);
+      snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
+      if(num == 1) {
+        window_set_background_color(s_main_window, GColorSunsetOrange);
+      } else if(num == 2) {
+        window_set_background_color(s_main_window, GColorVividCerulean);
+      }
     }
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "did_read(<%p>, %d)", attr, result);
@@ -89,6 +102,9 @@ static void prv_availablility_status_changed(SmartstrapServiceId service_id, boo
 static void prv_notified(SmartstrapAttribute *attr) {
   if (attr == s_attr_attribute) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_attr_attribute)");
+  } else if (attr == s_team_attribute) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_team_attribute)");
+    smartstrap_attribute_read(s_team_attribute);
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "notified(<%p>)", attr);
   }
@@ -144,6 +160,7 @@ static void prv_init(void) {
   smartstrap_subscribe(handlers);
   smartstrap_set_timeout(50);
   s_attr_attribute = smartstrap_attribute_create(s_service_id, s_attribute_id, s_buffer_length);
+  s_team_attribute = smartstrap_attribute_create(s_service_id, s_team_attribute_id, s_buffer_length);
   app_timer_register(1000, prv_send_request, NULL);
 }
 
