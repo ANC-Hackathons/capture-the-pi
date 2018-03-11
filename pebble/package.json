@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "author": "ANC Hackathons",
+  "private": true,
+  "dependencies": {},
+  "keywords": [
+    "pebble-app"
+  ],
+  "pebble": {
+    "sdkVersion": "3",
+    "resources": {
+      "media": []
+    },
+    "projectType": "native",
+    "uuid": "1dd0f46a-5253-413a-b2e9-80827fc0a039",
+    "messageKeys": {},
+    "enableMultiJS": false,
+    "displayName": "Capture the Pi",
+    "watchapp": {
+      "onlyShownOnCommunication": false,
+      "hiddenApp": false,
+      "watchface": false
+    },
+    "targetPlatforms": [
+      "basalt"
+    ],
+    "capabilities": []
+  },
+  "name": "Capture the Pi"
+}
