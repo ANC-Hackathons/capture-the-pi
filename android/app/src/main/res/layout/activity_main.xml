@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.anc_hackathons.github.capturethepi.MainActivity">
+
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:text="@string/title_home"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/increase_your_score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Increase Your Score"
+        tools:layout_editor_absoluteX="53dp"
+        tools:layout_editor_absoluteY="137dp" />
+
+    <Button
+        android:id="@+id/increase_their_score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Increase Their Score"
+        tools:layout_editor_absoluteX="53dp"
+        tools:layout_editor_absoluteY="219dp" />
+
+</android.support.constraint.ConstraintLayout>

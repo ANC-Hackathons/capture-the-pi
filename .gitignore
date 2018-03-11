@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# OSX Files
+.DS_Store
+
+# Pebble build files
+.lock-waf_darwin_build
