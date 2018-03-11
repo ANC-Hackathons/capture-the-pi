@@ -144,6 +144,9 @@ void loop() {
     if (millis() - last_notify  > 2500) {
       Serial.println("Sending notification for 0x1001,0x0001");
       ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[0]);
+      if(teamChosen) {
+        ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[1]);
+      }
       last_notify = millis();
     }
   } else {
@@ -166,8 +169,6 @@ void chooseTeam() {
       digitalWrite(blueLEDPin, LOW);
       teamChosen = true;
       redTeam = true;
-      ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[1]);
-      Serial.println("Sending notification for 0x1001,0x0002");
     }
   //} else if (val == blueBaseVolt) {
   } else if (val >= blueBaseVolt && val <= blueBaseVolt + 10) {
@@ -179,8 +180,6 @@ void chooseTeam() {
       digitalWrite(redLEDPin, LOW);
       teamChosen = true;
       blueTeam = true;
-      ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[1]);
-      Serial.println("Sending notification for 0x1001,0x0002");
     }
   }
 }

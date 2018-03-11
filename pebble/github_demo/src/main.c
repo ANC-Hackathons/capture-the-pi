@@ -11,11 +11,12 @@ static char s_text_buffer1[20];
 static char s_text_buffer2[20];
 static SmartstrapAttribute *s_attr_attribute;
 static SmartstrapAttribute *s_team_attribute;
+static bool teamChosen = false;
 
 // Define constants for your service ID, attribute ID
 // and buffer size of your attribute.
 static const SmartstrapServiceId s_service_id = 0x1001;
-static const SmartstrapAttributeId s_attribute_id = 0x0001;
+static const SmartstrapAttributeId s_attr_attribute_id = 0x0001;
 static const SmartstrapAttributeId s_team_attribute_id = 0x0002;
 static const int s_buffer_length = 64;
 
@@ -34,20 +35,23 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
     if (result == SmartstrapResultOk && length == 4) {
       uint32_t num;
       memcpy(&num, data, 4);
-      snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
-      text_layer_set_text(s_attr_text_layer, s_text_buffer1);
+      //snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
+      //text_layer_set_text(s_attr_text_layer, s_text_buffer1);
     }
   } else if (attr == s_team_attribute) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "did_read(s_team_attribute, %d, %d)", result, length);
+    APP_LOG(APP_LOG_LEVEL_WARNING, "did_read(s_team_attribute, %d, %d)", result, length);
     if (result == SmartstrapResultOk) {
       uint32_t num;
       memcpy(&num, data, 4);
       snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
       if(num == 1) {
-        window_set_background_color(s_main_window, GColorSunsetOrange);
+        window_set_background_color(s_main_window, GColorMelon);
       } else if(num == 2) {
-        window_set_background_color(s_main_window, GColorVividCerulean);
+        window_set_background_color(s_main_window, GColorCeleste);
       }
+      text_layer_set_text(s_attr_text_layer, "Score:");
+      text_layer_set_text(s_raw_text_layer, "0 | 0");
+      teamChosen = true;
     }
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "did_read(<%p>, %d)", attr, result);
@@ -65,7 +69,7 @@ static void prv_did_write(SmartstrapAttribute *attr, SmartstrapResult result) {
 static void prv_write_read_test_attr(void) {
   SmartstrapResult result;
   if (!smartstrap_service_is_available(smartstrap_attribute_get_service_id(s_attr_attribute))) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "s_attr_attribute is not available");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "service is not available");
     return;
   }
 
@@ -103,8 +107,10 @@ static void prv_notified(SmartstrapAttribute *attr) {
   if (attr == s_attr_attribute) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_attr_attribute)");
   } else if (attr == s_team_attribute) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "notified(s_team_attribute)");
-    smartstrap_attribute_read(s_team_attribute);
+    APP_LOG(APP_LOG_LEVEL_WARNING, "notified(s_team_attribute)");
+    if(!teamChosen) {
+      smartstrap_attribute_read(s_team_attribute);
+    }
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "notified(<%p>)", attr);
   }
@@ -141,6 +147,8 @@ static void prv_main_window_load(Window *window) {
 
 static void prv_main_window_unload(Window *window) {
   text_layer_destroy(s_status_layer);
+  text_layer_destroy(s_attr_text_layer);
+  text_layer_destroy(s_raw_text_layer);
 }
 
 static void prv_init(void) {
@@ -159,7 +167,7 @@ static void prv_init(void) {
   };
   smartstrap_subscribe(handlers);
   smartstrap_set_timeout(50);
-  s_attr_attribute = smartstrap_attribute_create(s_service_id, s_attribute_id, s_buffer_length);
+  s_attr_attribute = smartstrap_attribute_create(s_service_id, s_attr_attribute_id, s_buffer_length);
   s_team_attribute = smartstrap_attribute_create(s_service_id, s_team_attribute_id, s_buffer_length);
   app_timer_register(1000, prv_send_request, NULL);
 }
