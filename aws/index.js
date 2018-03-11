@@ -21,13 +21,15 @@ app.get('/score/blue', function(req, res) {
 });
 
 app.put('/score/red/:score', function(req, res) {
-  red += req.params.score;
+  red += parseInt(req.params.score, 10);
   console.log(`Red score now: ${red}`);
+  res.sendStatus(200);
 });
 
 app.put('/score/blue/:score', function(req, res) {
-  blue += req.params.score;
+  blue += parseInt(req.params.score);
   console.log(`Blue score now: ${blue}`);
+  res.sendStatus(200);
 });
 
 app.post('/reset', function(req, res) {
@@ -36,6 +38,7 @@ app.post('/reset', function(req, res) {
   console.log('Reset occurred');
   console.log(`Red score now: ${red}`);
   console.log(`Blue score now: ${blue}`);
+  res.sendStatus(200);
 });
 
 app.listen(3000)
