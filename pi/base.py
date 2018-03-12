@@ -80,7 +80,7 @@ if __name__ == "__main__":
   while True:
     try:
       response, content = http.Http().request(
-        'http://ec2-52-91-107-97.compute-1.amazonaws.com:3000/score',
+        'https://fathomless-inlet-46417.herokuapp.com/score',
         'GET',
         '',
         {
