@@ -4,6 +4,8 @@
 import RPi.GPIO as GPIO
 import Tkinter
 import time
+import httplib2 as http
+import json
 
 class app_tk(Tkinter.Tk):
   def __init__(self, parent):
@@ -13,16 +15,19 @@ class app_tk(Tkinter.Tk):
 
   def initialize(self):
     self.grid()
+    self.grid_columnconfigure(0, weight=1)
+    self.grid_columnconfigure(1, weight=1)
 
     self.labelVariable = Tkinter.StringVar()
-    self.label = Tkinter.Label(self, textvariable=self.labelVariable);
+    self.scoreVariable = Tkinter.StringVar()
+    self.label = Tkinter.Label(self, textvariable=self.labelVariable, font=("Courier", 44));
     self.label.grid(column=0, row=0, columnspan = 2);
     self.labelVariable.set(u"Select a Team:");
 
-    self.buttonRed = Tkinter.Button(self, text=u"Red Base", command=self.setRed)
+    self.buttonRed = Tkinter.Button(self, text=u"Red Base", font=("Courier", 22), command=self.setRed)
     self.buttonRed.grid(column=0, row=1);
 
-    self.buttonBlue = Tkinter.Button(self, text=u"Blue Base", command=self.setBlue)
+    self.buttonBlue = Tkinter.Button(self, text=u"Blue Base", font=("Courier", 22), command=self.setBlue)
     self.buttonBlue.grid(column=1, row=1);
 
   def setRed(self):
@@ -47,12 +52,18 @@ class app_tk(Tkinter.Tk):
     print 'Destroying Buttons'
     self.buttonRed.destroy()
     self.buttonBlue.destroy()
-    self.buttonDone = Tkinter.Button(self, text=u"Done", command=self.doneRegistering)
+    self.buttonDone = Tkinter.Button(self, text=u"Done", font=("Courier", 22), command=self.doneRegistering)
     self.buttonDone.grid(column=0, row=1, columnspan=2);
 
   def doneRegistering(self):
     self.buttonDone.destroy()
-    self.labelVariable.set(u"Waiting for other team...");
+    self.labelVariable.set(u"Score:");
+    self.score = Tkinter.Label(self, textvariable=self.scoreVariable, font=("Courier", 44));
+    self.score.grid(column=0, row=1, columnspan = 2);
+
+  def setScore(self, red, blue):
+    print('Updating score')
+    self.scoreVariable.set(str(red) + "|" + str(blue));
 
 if __name__ == "__main__":
   PIN_1 = 26
@@ -65,4 +76,23 @@ if __name__ == "__main__":
 
   app = app_tk(None)
   app.title('Capture The Pi')
-  app.mainloop()
+  app.minsize(width=800, height=400)
+  while True:
+    try:
+      response, content = http.Http().request(
+        'http://ec2-52-91-107-97.compute-1.amazonaws.com:3000/score',
+        'GET',
+        '',
+        {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8'
+        }
+      )
+      score = json.loads(content)
+      print("Received score from aws:")
+      print(score)
+      app.setScore(score.get("red"), score.get("blue"))
+    except:
+      print('Connection refused; will try again')
+    app.update_idletasks()
+    app.update()
