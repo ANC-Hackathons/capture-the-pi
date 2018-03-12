@@ -42,5 +42,5 @@ app.post('/reset', function(req, res) {
   res.sendStatus(200);
 });
 
-console.log(`Listening on port ${PORT}`);
+console.log(`Listening on port: ${PORT}`);
 app.listen(PORT)
