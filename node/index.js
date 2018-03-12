@@ -1,5 +1,6 @@
 let express = require('express')
 let app = express()
+let port = process.env.PORT || 8080
 
 let blue= 0;
 let red= 0;
@@ -41,4 +42,5 @@ app.post('/reset', function(req, res) {
   res.sendStatus(200);
 });
 
-app.listen(3000)
+console.log(`Listening on port ${PORT}`);
+app.listen(PORT)
