@@ -22,7 +22,7 @@ const int blueCarryVolt = 192;    // Voltage of Blue player with flag (0 - 255)
 const int redCarryPulse = 510;    // Pulse for Red player with flag in ms
 const int blueCarryPulse = 1530;  // Pulse for Blue player with flag in ms
 
-const int debounceTime = 1000;    // The time in ms required for a switch to be stable
+const int debounceTime = 2000;    // The time in ms required for a switch to be stable
 
 boolean isTeamChosen = false;     // Init sketch without a team
 boolean watchTeamSet = false;     // Flag for notifying Pebble of team selection
@@ -68,12 +68,12 @@ void setup() {
 
 void loop() {
 
-      Serial.println(score);
+      //Serial.println(score);
   static uint32_t last_check = 0;
   if (last_check == 0) {
     last_check = millis();
   }
-  if (millis() - last_check > 100) {
+  if (millis() - last_check > 500) {
     last_check = millis();
     if(!isTeamChosen) {
       // Initialize the glove team
@@ -88,8 +88,6 @@ void loop() {
         digitalWrite(whiteLEDPin, whiteToggle);
       }
     }
-
-    //Serial.println(score);
   }
   
   // Let the ArduinoPebbleSerial code do its processing
@@ -123,7 +121,7 @@ void loop() {
           team = 2;
         }
         ArduinoPebbleSerial::write(true, (const uint8_t *)&team, sizeof(team));
-        watchTeamSet = false;
+        watchTeamSet = true;
       } else {
         // invalid request type - just ignore the request
       }
@@ -157,11 +155,15 @@ void loop() {
     // notify the pebble every second
     if (millis() - last_notify  > 1000) {
       Serial.println("Sending notification for 0x1001,0x0001");
-      //ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[0]);
-      if(watchTeamSet && isTeamChosen) {
+      ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[0]);
+      Serial.println(!watchTeamSet);
+      Serial.println(isTeamChosen);
+      if(isTeamChosen) {
+        Serial.println("Sending notification for 0x1001,0x0002");
         ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[1]);
       }
       if(isScoreChanged) {
+        Serial.println("Sending notification for 0x1001,0x0003");
         ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[2]);
       }
       last_notify = millis();
@@ -176,7 +178,8 @@ void loop() {
 
 void chooseTeam() {
   int val = analogRead(foreFingerPin);
-  if(val == redBaseVolt) {
+  Serial.println(val);
+  if(val <= redBaseVolt + 50) {
     // Red base is kept low
     if (blockingDebounce(foreFingerPin, val)) {
       // Turn on the red LED
@@ -185,7 +188,6 @@ void chooseTeam() {
       digitalWrite(blueLEDPin, LOW);
       isTeamChosen = true;
       redTeam = true;
-      watchTeamSet = true;
     }
   } else if (val >= blueBaseVolt && val <= blueBaseVolt + 10) {
     // Blue base is kept high
@@ -196,7 +198,6 @@ void chooseTeam() {
       digitalWrite(redLEDPin, LOW);
       isTeamChosen = true;
       blueTeam = true;
-      watchTeamSet = true;
     }
   }
 }
@@ -211,7 +212,7 @@ void stealCheck() {
     flagBearer = true;
   } else if (blueTeam &&
              !flagBearer &&
-             val == redBaseVolt &&
+             val <= redBaseVolt + 50 &&
              blockingDebounce(foreFingerPin, val)) {
     flagBearer = true;
   }
@@ -232,7 +233,7 @@ void captureCheck() {
   int val = analogRead(foreFingerPin);
   if (redTeam &&
       flagBearer &&
-      val == redBaseVolt &&
+      val <= redBaseVolt + 50 &&
       blockingDebounce(foreFingerPin, val)) {
     flagBearer = false;
     score += 3;
@@ -251,11 +252,11 @@ void captureCheck() {
 }
 
 boolean blockingDebounce(int pin, int initialState) {
-  //Serial.println("Debouncing");
+  Serial.println("Debouncing");
   int counter = 0;
   int state = initialState;
 
-  while (state >= initialState - 50 && state <= initialState + 50) {  // Debounce loop
+  while (state >= initialState - 100 && state <= initialState + 100) {  // Debounce loop
     if(counter >= debounceTime) {
       return true;  // Return true if state hasn't changed
     }

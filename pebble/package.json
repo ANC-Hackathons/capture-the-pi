@@ -24,7 +24,15 @@
     "targetPlatforms": [
       "basalt"
     ],
+    "messageKeys": [
+      "RedScore",
+      "BlueScore",
+      "NewKill"
+    ],
     "capabilities": []
   },
-  "name": "Capture the Pi"
+  "name": "Capture the Pi",
+  "RedScore": 0,
+  "BlueScore": 1,
+  "NewKill": 2
 }

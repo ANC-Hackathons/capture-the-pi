@@ -13,9 +13,15 @@ static char s_score_buffer[20];
 static SmartstrapAttribute *s_attr_attribute;
 static SmartstrapAttribute *s_team_attribute;
 static SmartstrapAttribute *s_score_attribute;
+
+// Possible team values:
+//   0 = unset
+//   1 = Red
+//   2 = Blue
+static uint32_t myTeam = 0;
 static bool teamChosen = false;
-static uint32_t myScore = 0;
-static uint32_t theirScore = 0;
+static uint32_t redScore = 0;
+static uint32_t blueScore = 0;
 
 // Define constants for your service ID, attribute ID
 // and buffer size of your attribute.
@@ -25,11 +31,50 @@ static const SmartstrapAttributeId s_team_attribute_id = 0x0002;
 static const SmartstrapAttributeId s_score_attribute_id = 0x0003;
 static const int s_buffer_length = 64;
 
+// Largest expected inbox and outbox message sizes
+const uint32_t inbox_size = 64;
+const uint32_t outbox_size = 256;
+
 static void prv_update_text(void) {
   if (smartstrap_service_is_available(s_service_id)) {
     text_layer_set_text(s_status_layer, "Connected!");
   } else {
     text_layer_set_text(s_status_layer, "Connecting...");
+  }
+}
+
+static void prv_send_score_update(uint32_t score, uint32_t myTeam) {
+  APP_LOG(APP_LOG_LEVEL_WARNING, "Sending score update. Score: %d ; myTeam: %d", score, myTeam);
+
+  // Declare the dictionary's iterator
+  DictionaryIterator *out_iter;
+
+  // Prepare the outbox buffer for this message
+  AppMessageResult result = app_message_outbox_begin(&out_iter);
+
+  if(result == APP_MSG_OK) {
+    if (myTeam == 0) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Score was reported, but myTeam was set to 0");
+      return;
+    } else if (myTeam == 1) {
+      APP_LOG(APP_LOG_LEVEL_WARNING, "%d", MESSAGE_KEY_RedScore);
+      dict_write_int(out_iter, MESSAGE_KEY_RedScore, &score, sizeof(uint32_t), true);
+    } else if (myTeam == 2) {
+      APP_LOG(APP_LOG_LEVEL_WARNING, "%d", MESSAGE_KEY_BlueScore);
+      dict_write_int(out_iter, MESSAGE_KEY_BlueScore, &score, sizeof(uint32_t), true);
+    } else {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Score was reported, but myTeam was set to %d", myTeam);
+      return;
+    }
+
+    // Send this message
+    result = app_message_outbox_send();
+    if(result != APP_MSG_OK) {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
+    }
+  } else {
+    // The outbox cannot be used right now
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
   }
 }
 
@@ -48,7 +93,9 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
     if (result == SmartstrapResultOk) {
       uint32_t num;
       memcpy(&num, data, 4);
-      snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
+      //snprintf(s_text_buffer1, 20, "%u", (unsigned int)num);
+      memcpy(&myTeam, data, 4);
+      myTeam = num;
       if(num == 1) {
         window_set_background_color(s_main_window, GColorMelon);
       } else if(num == 2) {
@@ -56,7 +103,7 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
       }
       text_layer_set_text(s_attr_text_layer, "Score:");
 
-      snprintf(s_score_buffer, 20, "%u | %u", (unsigned int)myScore, (unsigned int)theirScore);
+      snprintf(s_score_buffer, 20, "%u | %u", (unsigned int)redScore, (unsigned int)blueScore);
       text_layer_set_text(s_raw_text_layer, s_score_buffer);
       teamChosen = true;
     }
@@ -65,10 +112,14 @@ static void prv_did_read(SmartstrapAttribute *attr, SmartstrapResult result,
     if (result == SmartstrapResultOk) {
       uint32_t score;
       memcpy(&score, data, 4);
-      myScore += score;
-      snprintf(s_score_buffer, 20, "%u | %u", (unsigned int)myScore, (unsigned int)theirScore);
+      if (myTeam == 1) {
+        redScore += score;
+      } else if (myTeam == 2) {
+        blueScore += score;
+      }
+      snprintf(s_score_buffer, 20, "%u | %u", (unsigned int)redScore, (unsigned int)blueScore);
       text_layer_set_text(s_raw_text_layer, s_score_buffer);
-      teamChosen = true;
+      prv_send_score_update(score, myTeam);
     }
   } else {
     APP_LOG(APP_LOG_LEVEL_ERROR, "did_read(<%p>, %d)", attr, result);
@@ -177,6 +228,34 @@ static void prv_main_window_unload(Window *window) {
   text_layer_destroy(s_raw_text_layer);
 }
 
+static void inbox_received_callback(DictionaryIterator *iter, void *context) {
+  // A new message has been successfully received
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received message from phone");
+  // Does this message contain a temperature value?
+  Tuple *red_score_tuple = dict_find(iter, MESSAGE_KEY_RedScore);
+  Tuple *blue_score_tuple = dict_find(iter, MESSAGE_KEY_BlueScore);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d", (int)red_score_tuple->value->int32);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d", (int)blue_score_tuple->value->int32);
+  snprintf(s_score_buffer, 20, "%d | %d", (int)red_score_tuple->value->int32, (int)blue_score_tuple->value->int32);
+  text_layer_set_text(s_raw_text_layer, s_score_buffer);
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  // A message was received, but had to be dropped
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped. Reason: %d", (int)reason);
+}
+
+static void outbox_sent_callback(DictionaryIterator *iter, void *context) {
+  // The message just sent has been successfully delivered
+
+}
+
+static void outbox_failed_callback(DictionaryIterator *iter,
+                                          AppMessageResult reason, void *context) {
+  // The message just sent failed to be delivered
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message send failed. Reason: %d", (int)reason);
+}
+
 static void prv_init(void) {
   s_main_window = window_create();
 
@@ -198,6 +277,21 @@ static void prv_init(void) {
   s_score_attribute = smartstrap_attribute_create(s_service_id, s_score_attribute_id, s_buffer_length);
   //app_timer_register(1000, prv_send_request, NULL);
   prv_init_team();
+
+  // Open AppMessage
+  app_message_open(inbox_size, outbox_size);
+
+  // Register to be notified about inbox received events
+  app_message_register_inbox_received(inbox_received_callback);
+
+  // Register to be notified about inbox dropped events
+  app_message_register_inbox_dropped(inbox_dropped_callback);
+
+  // Register to be notified about outbox sent events
+  app_message_register_outbox_sent(outbox_sent_callback);
+
+  // Register to be notified about outbox failed events
+  app_message_register_outbox_failed(outbox_failed_callback);
 }
 
 static void prv_deinit(void) {

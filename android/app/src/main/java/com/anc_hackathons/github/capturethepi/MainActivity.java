@@ -1,5 +1,6 @@
 package com.anc_hackathons.github.capturethepi;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class MainActivity extends AppCompatActivity {
 
     private static final String API_URL = "https://fathomless-inlet-46417.herokuapp.com";
+    private BroadcastReceiver receiver;
 
     private ScoreService.ScoreServer scoreServer;
     private int redScore = 0;
@@ -55,23 +57,12 @@ public class MainActivity extends AppCompatActivity {
         PebbleKit.registerReceivedDataHandler(getApplicationContext(), dataReceiver);
     }
 
-    @Override
-    public void onPause() {
-        super.onResume();
-
-        // Register the receiver
-        unregisterReceiver(dataReceiver);
-    }
-
     public void getScore() {
         scoreServer.getScore().enqueue(new Callback<Score>() {
             @Override
             public void onResponse(Call<Score> call, Response<Score> response) {
 
                 if(response.isSuccessful()) {
-                    Log.d("MainActivity", "posts loaded from API");
-                    Log.d("MainActivity", response.body().getRed().toString());
-                    Log.d("MainActivity", response.body().getBlue().toString());
                     if (redScore != response.body().getRed() || blueScore != response.body().getBlue()) {
                         redScore = response.body().getRed();
                         blueScore = response.body().getBlue();
@@ -88,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     int statusCode  = response.code();
                     // handle request errors depending on status code
+                    Log.d("MainActivity", "error getting scores");
+                    Log.d("MainActivity", String.valueOf(statusCode));
                 }
 
                 getScore();
@@ -103,6 +96,50 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void incrementRedScore(String score) {
+        scoreServer.incrementRedScore(score).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+
+                if(response.isSuccessful()) {
+                    Log.d("MainActivity", "Red score put successful");
+                }else {
+                    int statusCode  = response.code();
+                    Log.d("MainActivity", "error getting scores");
+                    Log.d("MainActivity", String.valueOf(statusCode));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("MainActivity", "error putting Red score");
+                Log.d("MainActivity", t.getMessage());
+            }
+        });
+    }
+
+    public void incrementBlueScore(String score) {
+        scoreServer.incrementBlueScore(score).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+
+                if(response.isSuccessful()) {
+                    Log.d("MainActivity", "Blue score put successful");
+                }else {
+                    int statusCode  = response.code();
+                    Log.d("MainActivity", "error getting scores");
+                    Log.d("MainActivity", String.valueOf(statusCode));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("MainActivity", "error putting Blue score");
+                Log.d("MainActivity", t.getMessage());
+            }
+        });
+    }
+
     // Create a new receiver to get AppMessages from the C app
     PebbleKit.PebbleDataReceiver dataReceiver = new PebbleKit.PebbleDataReceiver(Constants.PEBBLE_SIFTER_UUID) {
 
@@ -111,24 +148,32 @@ public class MainActivity extends AppCompatActivity {
                                 PebbleDictionary dict) {
             // A new AppMessage was received, tell Pebble
             PebbleKit.sendAckToPebble(context, transaction_id);
+            Log.d("MainActivity", "Received score update from pebble");
 
             // If the tuple is present...
             Long redScoreValue = dict.getInteger(Constants.RED_SCORE);
             if(redScoreValue != null) {
+                Log.d("MainActivity", "Received red score update from pebble");
+
                 // Read the integer value
                 int red = redScoreValue.intValue();
+                Log.d("MainActivity", String.valueOf(red));
+                incrementRedScore(String.valueOf(red));
             }
 
             Long blueScoreValue = dict.getInteger(Constants.BLUE_SCORE);
             if(blueScoreValue != null) {
+                Log.d("MainActivity", "Received blue score update from pebble");
+
                 // Read the integer value
                 int blue = blueScoreValue.intValue();
+                Log.d("MainActivity", String.valueOf(blue));
+                incrementBlueScore(String.valueOf(blue));
             }
 
             Long newKill = dict.getInteger(Constants.NEW_KILL);
             if(newKill != null) {
-                // Read the integer value
-                int kill = newKill.intValue();
+                Log.d("MainActivity", "Received new kill update from pebble");
             }
         }
 
