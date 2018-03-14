@@ -4,6 +4,7 @@ let port = process.env.PORT || 8080
 
 let blue= 0;
 let red= 0;
+let killedRecently = false;
 
 app.get('/', function (req, res) {
     res.send('Hello World')
@@ -40,6 +41,13 @@ app.post('/reset', function(req, res) {
   console.log(`Red score now: ${red}`);
   console.log(`Blue score now: ${blue}`);
   res.sendStatus(200);
+});
+
+app.post('/newKill', function(req, res) {
+  killedRecently = true;
+  setTimeout(function() {
+    killedRecently = false;
+  }, 5000);
 });
 
 console.log(`Listening on port: ${port}`);
