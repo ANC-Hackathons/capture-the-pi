@@ -47,7 +47,8 @@ app.post('/newKill', function(req, res) {
   killedRecently = true;
   setTimeout(function() {
     killedRecently = false;
-  }, 5000);
+  }, 10000);
+  res.sendStatus(200);
 });
 
 console.log(`Listening on port: ${port}`);
