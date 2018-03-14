@@ -11,7 +11,7 @@ app.get('/', function (req, res) {
 })
 
 app.get('/score', function(req, res) {
-  res.json({ red, blue });
+  res.json({ red, blue, killedRecently });
 });
 
 app.get('/score/red', function(req, res) {
