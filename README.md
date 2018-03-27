@@ -1,2 +1,2 @@
-# capture-the-pi
+# Capture The Pi
 
