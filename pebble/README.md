@@ -1,7 +1,7 @@
 # Pebble App Portion
 
 ## Pair your computer with your Pebble Time
-* Enable Bluetooth is on your Pebble Time
+* Enable Bluetooth on your Pebble Time
 * Ensure your Pebble Time is not paired with another device. You may need to disable Bluetooth on your phone.
 * Enable Bluetooth on your computer
 * Pair your computer with your watch as you would with any other device. On OSX the process would be as follows:
