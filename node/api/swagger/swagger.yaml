@@ -1,0 +1,220 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Hello World App
+# during dev, should point to your local machine
+host: localhost:10010
+# basePath prefixes all resource paths 
+basePath: /
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+  - application/octet-stream
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+  - text/plain
+paths:
+  /hello:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: hello_world
+    get:
+      description: Returns 'Hello' to the caller
+      # used as the method name of the controller
+      operationId: hello
+      parameters:
+        - name: name
+          in: query
+          description: The name of the person to whom to say hello
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/HelloWorldResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /score:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    get:
+      description: Returns score to the caller
+      # used as the method name of the controller
+      operationId: getFullScore
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/FullScoreResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /score/red:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    get:
+      description: Returns score to the caller
+      # used as the method name of the controller
+      operationId: getRedScore
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/RedScoreResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /score/red/{score}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    put:
+      description: Increments the score
+      # used as the method name of the controller
+      operationId: putRedScore
+      parameters:
+        - name: score
+          in: path
+          description: The value to increment the Red team score by
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /score/blue:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    get:
+      description: Returns score to the caller
+      # used as the method name of the controller
+      operationId: getBlueScore
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/BlueScoreResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /score/blue/{score}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    put:
+      description: Increments the score
+      # used as the method name of the controller
+      operationId: putBlueScore
+      parameters:
+        - name: score
+          in: path
+          description: The value to increment the Blue team score by
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /reset:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    post:
+      description: Reset the score server
+      # used as the method name of the controller
+      operationId: resetScore
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /newKill:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: score
+    post:
+      description: Identify that a flag has been recovered
+      # used as the method name of the controller
+      operationId: newKill
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  HelloWorldResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  FullScoreResponse:
+    required:
+      - red
+      - blue
+      - killedRecently
+    properties:
+      red:
+        type: integer
+      blue:
+        type: integer
+      killedRecently:
+        type: boolean
+  RedScoreResponse:
+    required:
+      - red
+    properties:
+      red:
+        type: integer
+  BlueScoreResponse:
+    required:
+      - blue
+    properties:
+      blue:
+        type: integer
