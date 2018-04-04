@@ -28,6 +28,9 @@ public class ScoreService {
         @PUT("/score/blue/{score}")
         Call<String> incrementBlueScore(
                 @Path("score") String score);
+
+        @PUT("/newKill")
+        Call<String> newKill();
     }
 
 }

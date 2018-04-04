@@ -2,7 +2,12 @@
 
 // Pebble communication
 static const uint16_t s_service_ids[] = {(uint16_t)0x1001};
-static const uint16_t s_attr_ids[] = {(uint16_t)0x0001, (uint16_t)0x0002, (uint16_t)0x0003};
+static const uint16_t s_attr_ids[] = {
+  (uint16_t)0x0001,
+  (uint16_t)0x0002,
+  (uint16_t)0x0003,
+  (uint16_t)0x0004
+};
 static uint8_t pebble_buffer[GET_PAYLOAD_BUFFER_SIZE(200)];
 
 const int foreFingerPin = A2;     // The number of the palm reader pin
@@ -33,6 +38,7 @@ boolean whiteToggle = false;      // Toggle for blinking the white LEDs
 
 int score = 0;                    // Temporary local score tracker
 boolean isScoreChanged = false;   // Flag for notifying Pebble of a score change
+boolean canKill = true;           // Flag to prevent rapid extra kills
 
 void setup() {
   // Set up serial communication
@@ -135,6 +141,14 @@ void loop() {
       } else {
         // invalid request type - just ignore the request
       }
+    } else if ((service_id == s_service_ids[0]) && (attribute_id == s_attr_ids[3])) {
+      if (type == RequestTypeWrite) {
+        // s_attr_id[2] is a request for current local score
+        Serial.println("Got Write for 0x1001,0x0004");
+        canKill = true;
+      } else {
+        // invalid request type - just ignore the request
+      }
     } else {
       // unsupported attribute - fail the request
       ArduinoPebbleSerial::write(false, NULL, 0);
@@ -165,6 +179,10 @@ void loop() {
       if(isScoreChanged) {
         Serial.println("Sending notification for 0x1001,0x0003");
         ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[2]);
+      }
+      if(!canKill) {
+        Serial.println("Sending notification for 0x1001,0x0004");
+        ArduinoPebbleSerial::notify(s_service_ids[0], s_attr_ids[3]);
       }
       last_notify = millis();
     }
@@ -220,12 +238,22 @@ void stealCheck() {
 
 void killCheck() {
   int val = pulseIn(foreFingerPin, HIGH);
-  if (redTeam && val >= blueCarryPulse - 15 && val <= blueCarryPulse + 15) {
+  if (canKill &&
+      redTeam &&
+      val >= blueCarryPulse - 15 &&
+      val <= blueCarryPulse + 15 &&
+      blockingPulseDebounce(foreFingerPin, val)) {
     score++;
     isScoreChanged = true;
-  } else if (blueTeam && val >= redCarryPulse - 15 && val <= redCarryPulse + 15) {
+    canKill = false;
+  } else if (canKill &&
+             blueTeam &&
+             val >= redCarryPulse - 15 &&
+             val <= redCarryPulse + 15 &&
+             blockingPulseDebounce(foreFingerPin, val)) {
     score++;
     isScoreChanged = true;
+    canKill = false;
   }
 }
 
@@ -263,6 +291,22 @@ boolean blockingDebounce(int pin, int initialState) {
     delay(1);
     counter++;
     state = analogRead(pin);
+  }
+  return false;  // Return false if the state has changed
+}
+
+boolean blockingPulseDebounce(int pin, int initialState) {
+  Serial.println("Pulse Debouncing");
+  int counter = 0;
+  int state = initialState;
+
+  while (state >= initialState - 100 && state <= initialState + 100) {  // Debounce loop
+    if(counter >= debounceTime) {
+      return true;  // Return true if state hasn't changed
+    }
+    delay(1);
+    counter++;
+    state = pulseIn(foreFingerPin, HIGH);
   }
   return false;  // Return false if the state has changed
 }

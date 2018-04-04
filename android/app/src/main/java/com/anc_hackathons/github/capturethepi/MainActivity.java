@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private ScoreService.ScoreServer scoreServer;
     private int redScore = 0;
     private int blueScore = 0;
+    private boolean killedRecently = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +73,15 @@ public class MainActivity extends AppCompatActivity {
 
                         dict.addInt32(Constants.RED_SCORE, redScore);
                         dict.addInt32(Constants.BLUE_SCORE, blueScore);
+
+                        // Send the dictionary
+                        PebbleKit.sendDataToPebble(getApplicationContext(), Constants.PEBBLE_SIFTER_UUID, dict);
+                    }
+
+                    if (killedRecently != response.body().getKilledRecently() && !killedRecently) {
+                        // Create a new dictionary
+                        PebbleDictionary dict = new PebbleDictionary();
+                        dict.addInt32(Constants.NEW_KILL, 0);
 
                         // Send the dictionary
                         PebbleKit.sendDataToPebble(getApplicationContext(), Constants.PEBBLE_SIFTER_UUID, dict);
@@ -140,6 +150,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void postNewKill() {
+        scoreServer.newKill().enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+
+                if(response.isSuccessful()) {
+                    Log.d("MainActivity", "post new kill successful");
+                }else {
+                    int statusCode  = response.code();
+                    Log.d("MainActivity", "error posting new kill");
+                    Log.d("MainActivity", String.valueOf(statusCode));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("MainActivity", "error posting new kill");
+                Log.d("MainActivity", t.getMessage());
+            }
+        });
+    }
+
     // Create a new receiver to get AppMessages from the C app
     PebbleKit.PebbleDataReceiver dataReceiver = new PebbleKit.PebbleDataReceiver(Constants.PEBBLE_SIFTER_UUID) {
 
@@ -174,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
             Long newKill = dict.getInteger(Constants.NEW_KILL);
             if(newKill != null) {
                 Log.d("MainActivity", "Received new kill update from pebble");
+                postNewKill();
             }
         }
 

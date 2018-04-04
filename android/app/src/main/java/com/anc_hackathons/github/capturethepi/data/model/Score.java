@@ -15,6 +15,9 @@ public class Score {
     @SerializedName("blue")
     @Expose
     private Integer blue;
+    @SerializedName("killedRecently")
+    @Expose
+    private Boolean killedRecently;
 
     public Integer getRed() {
         return red;
@@ -30,6 +33,14 @@ public class Score {
 
     public void setBlue(Integer blue) {
         this.blue = blue;
+    }
+
+    public Boolean getKilledRecently() {
+        return killedRecently;
+    }
+
+    public void setKilledRecently(Boolean killedRecently) {
+        this.killedRecently = killedRecently;
     }
 
 }
