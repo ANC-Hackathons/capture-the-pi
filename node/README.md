@@ -1,6 +1,6 @@
 # Scoring Server Portion
 
-The scoring server is implemented using [Swagger](https://swagger.io/)
+The scoring server is implemented using [Swagger](https://swagger.io/) with [swagger-node](https://github.com/swagger-api/swagger-node) as the CLI.
 
 ## Install Dependencies
 
