@@ -13,6 +13,6 @@ This project is split into mutliple components. Specific information regarding i
 
 ## Accolades
 
-Capture The Pi earned the title of Most Creative during the 2018 ReadyTalk Pi Day Hackathon. A demonstration of the project can be seen here:
+Capture The Pi earned the title of Most Creative during the 2018 ReadyTalk Pi Day Hackathon. A demonstration of the project can be seen on YouTube:
 
 [![Capture The Pi presentation](https://img.youtube.com/vi/7TkEQ0ZJv1I/0.jpg)](https://www.youtube.com/embed/7TkEQ0ZJv1I?rel=0)
