@@ -1,7 +1,7 @@
 # Capture The Pi
 Capture The Pi is a digital take on the classic Capture The Flag game.
 
-<img src="https://scontent.fapa1-2.fna.fbcdn.net/v/t1.0-9/28951813_10106006604613103_2444090086552240128_o.jpg?_nc_cat=0&oh=7d47881de8ef335a4251d4c4f40de608&oe=5B2A0DA6" height="360">
+<img src="https://i.imgur.com/OtffugQ.jpg" height="360">
 
 ## How it Works
 
